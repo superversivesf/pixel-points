@@ -1,0 +1,351 @@
+@font-face {
+  font-family: 'Press Start 2P';
+  src: url('/fonts/PressStart2P-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+
+:root {
+  --font-head: 'Press Start 2P', 'Courier New', monospace;
+  --font-body: 'Courier New', monospace;
+
+  --hue-0: #666666;
+  --hue-1: #9b59f0;
+  --hue-2: #3498db;
+  --hue-3: #2ecc71;
+  --hue-5: #f1c40f;
+  --hue-8: #e67e22;
+  --hue-13: #e74c3c;
+  --hue-21: #ff6ec7;
+  --hue-coffee: #a1622a;
+  --hue-question: #95a5fc;
+}
+
+html[data-theme='crt-dark'] {
+  --bg: #0d0d1a;
+  --fg: #e8e8e8;
+  --muted: #8888aa;
+  --panel: #141422;
+  --border: #3a3a5c;
+  --accent: #00e5ff;
+  --accent-2: #ff6ec7;
+  --shadow: 0 0 18px rgba(0, 229, 255, 0.25);
+  --radius: 6px;
+  --card-selected: #ffffff;
+  --overlay-bg: rgba(5, 5, 15, 0.92);
+  --scanlines: 0.15;
+  --vignette: 0.5;
+
+  --card-0: color-mix(in srgb, var(--hue-0) 18%, #0d0d1a);
+  --card-1: color-mix(in srgb, var(--hue-1) 18%, #0d0d1a);
+  --card-2: color-mix(in srgb, var(--hue-2) 18%, #0d0d1a);
+  --card-3: color-mix(in srgb, var(--hue-3) 18%, #0d0d1a);
+  --card-5: color-mix(in srgb, var(--hue-5) 18%, #0d0d1a);
+  --card-8: color-mix(in srgb, var(--hue-8) 18%, #0d0d1a);
+  --card-13: color-mix(in srgb, var(--hue-13) 18%, #0d0d1a);
+  --card-21: color-mix(in srgb, var(--hue-21) 18%, #0d0d1a);
+  --card-coffee: color-mix(in srgb, var(--hue-coffee) 18%, #0d0d1a);
+  --card-question: color-mix(in srgb, var(--hue-question) 18%, #0d0d1a);
+
+  --card-border-0: var(--hue-0);
+  --card-border-1: var(--hue-1);
+  --card-border-2: var(--hue-2);
+  --card-border-3: var(--hue-3);
+  --card-border-5: var(--hue-5);
+  --card-border-8: var(--hue-8);
+  --card-border-13: var(--hue-13);
+  --card-border-21: var(--hue-21);
+  --card-border-coffee: var(--hue-coffee);
+  --card-border-question: var(--hue-question);
+
+  --card-glow-0: 0 0 12px color-mix(in srgb, var(--hue-0) 40%, transparent);
+  --card-glow-1: 0 0 12px color-mix(in srgb, var(--hue-1) 40%, transparent);
+  --card-glow-2: 0 0 12px color-mix(in srgb, var(--hue-2) 40%, transparent);
+  --card-glow-3: 0 0 12px color-mix(in srgb, var(--hue-3) 40%, transparent);
+  --card-glow-5: 0 0 12px color-mix(in srgb, var(--hue-5) 40%, transparent);
+  --card-glow-8: 0 0 12px color-mix(in srgb, var(--hue-8) 40%, transparent);
+  --card-glow-13: 0 0 12px color-mix(in srgb, var(--hue-13) 40%, transparent);
+  --card-glow-21: 0 0 12px color-mix(in srgb, var(--hue-21) 40%, transparent);
+  --card-glow-coffee: 0 0 12px color-mix(in srgb, var(--hue-coffee) 40%, transparent);
+  --card-glow-question: 0 0 12px color-mix(in srgb, var(--hue-question) 40%, transparent);
+
+  --card-text-0: var(--hue-0);
+  --card-text-1: var(--hue-1);
+  --card-text-2: var(--hue-2);
+  --card-text-3: var(--hue-3);
+  --card-text-5: var(--hue-5);
+  --card-text-8: var(--hue-8);
+  --card-text-13: var(--hue-13);
+  --card-text-21: var(--hue-21);
+  --card-text-coffee: var(--hue-coffee);
+  --card-text-question: var(--hue-question);
+}
+
+html[data-theme='crt-light'] {
+  --bg: #f4f1e8;
+  --fg: #1a1a2e;
+  --muted: #66668a;
+  --panel: #fffdf5;
+  --border: #c9c4ae;
+  --accent: #0099c2;
+  --accent-2: #d94f9b;
+  --shadow: 0 2px 0 rgba(26, 26, 46, 0.12);
+  --radius: 6px;
+  --card-selected: #1a1a2e;
+  --overlay-bg: rgba(244, 241, 232, 0.94);
+  --scanlines: 0;
+  --vignette: 0;
+
+  --card-0: color-mix(in srgb, var(--hue-0) 15%, white);
+  --card-1: color-mix(in srgb, var(--hue-1) 15%, white);
+  --card-2: color-mix(in srgb, var(--hue-2) 15%, white);
+  --card-3: color-mix(in srgb, var(--hue-3) 15%, white);
+  --card-5: color-mix(in srgb, var(--hue-5) 15%, white);
+  --card-8: color-mix(in srgb, var(--hue-8) 15%, white);
+  --card-13: color-mix(in srgb, var(--hue-13) 15%, white);
+  --card-21: color-mix(in srgb, var(--hue-21) 15%, white);
+  --card-coffee: color-mix(in srgb, var(--hue-coffee) 15%, white);
+  --card-question: color-mix(in srgb, var(--hue-question) 15%, white);
+
+  --card-border-0: color-mix(in srgb, var(--hue-0) 70%, black);
+  --card-border-1: color-mix(in srgb, var(--hue-1) 70%, black);
+  --card-border-2: color-mix(in srgb, var(--hue-2) 70%, black);
+  --card-border-3: color-mix(in srgb, var(--hue-3) 70%, black);
+  --card-border-5: color-mix(in srgb, var(--hue-5) 70%, black);
+  --card-border-8: color-mix(in srgb, var(--hue-8) 70%, black);
+  --card-border-13: color-mix(in srgb, var(--hue-13) 70%, black);
+  --card-border-21: color-mix(in srgb, var(--hue-21) 70%, black);
+  --card-border-coffee: color-mix(in srgb, var(--hue-coffee) 70%, black);
+  --card-border-question: color-mix(in srgb, var(--hue-question) 70%, black);
+
+  --card-glow-0: 0 0 0 0 transparent;
+  --card-glow-1: 0 0 0 0 transparent;
+  --card-glow-2: 0 0 0 0 transparent;
+  --card-glow-3: 0 0 0 0 transparent;
+  --card-glow-5: 0 0 0 0 transparent;
+  --card-glow-8: 0 0 0 0 transparent;
+  --card-glow-13: 0 0 0 0 transparent;
+  --card-glow-21: 0 0 0 0 transparent;
+  --card-glow-coffee: 0 0 0 0 transparent;
+  --card-glow-question: 0 0 0 0 transparent;
+
+  --card-text-0: color-mix(in srgb, var(--hue-0) 70%, black);
+  --card-text-1: color-mix(in srgb, var(--hue-1) 70%, black);
+  --card-text-2: color-mix(in srgb, var(--hue-2) 70%, black);
+  --card-text-3: color-mix(in srgb, var(--hue-3) 70%, black);
+  --card-text-5: color-mix(in srgb, var(--hue-5) 70%, black);
+  --card-text-8: color-mix(in srgb, var(--hue-8) 70%, black);
+  --card-text-13: color-mix(in srgb, var(--hue-13) 70%, black);
+  --card-text-21: color-mix(in srgb, var(--hue-21) 70%, black);
+  --card-text-coffee: color-mix(in srgb, var(--hue-coffee) 70%, black);
+  --card-text-question: color-mix(in srgb, var(--hue-question) 70%, black);
+}
+
+html[data-theme='pixel-dark'] {
+  --bg: #101014;
+  --fg: #e8e8e8;
+  --muted: #8a8aa0;
+  --panel: #1a1a24;
+  --border: #33334a;
+  --accent: #ffd166;
+  --accent-2: #06d6a0;
+  --shadow: 4px 4px 0 rgba(0, 0, 0, 0.5);
+  --radius: 0px;
+  --card-selected: #ffffff;
+  --overlay-bg: rgba(16, 16, 20, 0.95);
+  --scanlines: 0;
+  --vignette: 0;
+
+  --card-0: var(--hue-0);
+  --card-1: var(--hue-1);
+  --card-2: var(--hue-2);
+  --card-3: var(--hue-3);
+  --card-5: var(--hue-5);
+  --card-8: var(--hue-8);
+  --card-13: var(--hue-13);
+  --card-21: var(--hue-21);
+  --card-coffee: var(--hue-coffee);
+  --card-question: var(--hue-question);
+
+  --card-border-0: #0a0a0c;
+  --card-border-1: #0a0a0c;
+  --card-border-2: #0a0a0c;
+  --card-border-3: #0a0a0c;
+  --card-border-5: #0a0a0c;
+  --card-border-8: #0a0a0c;
+  --card-border-13: #0a0a0c;
+  --card-border-21: #0a0a0c;
+  --card-border-coffee: #0a0a0c;
+  --card-border-question: #0a0a0c;
+
+  --card-glow-0: 0 0 0 0 transparent;
+  --card-glow-1: 0 0 0 0 transparent;
+  --card-glow-2: 0 0 0 0 transparent;
+  --card-glow-3: 0 0 0 0 transparent;
+  --card-glow-5: 0 0 0 0 transparent;
+  --card-glow-8: 0 0 0 0 transparent;
+  --card-glow-13: 0 0 0 0 transparent;
+  --card-glow-21: 0 0 0 0 transparent;
+  --card-glow-coffee: 0 0 0 0 transparent;
+  --card-glow-question: 0 0 0 0 transparent;
+
+  --card-text-0: #0a0a0c;
+  --card-text-1: #ffffff;
+  --card-text-2: #ffffff;
+  --card-text-3: #063b20;
+  --card-text-5: #3a3000;
+  --card-text-8: #3a1a00;
+  --card-text-13: #ffffff;
+  --card-text-21: #3a0026;
+  --card-text-coffee: #ffffff;
+  --card-text-question: #060640;
+}
+
+html[data-theme='pixel-light'] {
+  --bg: #fef9ec;
+  --fg: #22223a;
+  --muted: #66668a;
+  --panel: #ffffff;
+  --border: #2a2a3e;
+  --accent: #e67e22;
+  --accent-2: #e74c3c;
+  --shadow: 4px 4px 0 rgba(42, 42, 62, 0.5);
+  --radius: 0px;
+  --card-selected: #22223a;
+  --overlay-bg: rgba(254, 249, 236, 0.95);
+  --scanlines: 0;
+  --vignette: 0;
+
+  --card-0: color-mix(in srgb, var(--hue-0) 60%, white);
+  --card-1: color-mix(in srgb, var(--hue-1) 60%, white);
+  --card-2: color-mix(in srgb, var(--hue-2) 60%, white);
+  --card-3: color-mix(in srgb, var(--hue-3) 60%, white);
+  --card-5: color-mix(in srgb, var(--hue-5) 60%, white);
+  --card-8: color-mix(in srgb, var(--hue-8) 60%, white);
+  --card-13: color-mix(in srgb, var(--hue-13) 60%, white);
+  --card-21: color-mix(in srgb, var(--hue-21) 60%, white);
+  --card-coffee: color-mix(in srgb, var(--hue-coffee) 60%, white);
+  --card-question: color-mix(in srgb, var(--hue-question) 60%, white);
+
+  --card-border-0: color-mix(in srgb, var(--hue-0) 70%, black);
+  --card-border-1: color-mix(in srgb, var(--hue-1) 70%, black);
+  --card-border-2: color-mix(in srgb, var(--hue-2) 70%, black);
+  --card-border-3: color-mix(in srgb, var(--hue-3) 70%, black);
+  --card-border-5: color-mix(in srgb, var(--hue-5) 70%, black);
+  --card-border-8: color-mix(in srgb, var(--hue-8) 70%, black);
+  --card-border-13: color-mix(in srgb, var(--hue-13) 70%, black);
+  --card-border-21: color-mix(in srgb, var(--hue-21) 70%, black);
+  --card-border-coffee: color-mix(in srgb, var(--hue-coffee) 70%, black);
+  --card-border-question: color-mix(in srgb, var(--hue-question) 70%, black);
+
+  --card-glow-0: 0 0 0 0 transparent;
+  --card-glow-1: 0 0 0 0 transparent;
+  --card-glow-2: 0 0 0 0 transparent;
+  --card-glow-3: 0 0 0 0 transparent;
+  --card-glow-5: 0 0 0 0 transparent;
+  --card-glow-8: 0 0 0 0 transparent;
+  --card-glow-13: 0 0 0 0 transparent;
+  --card-glow-21: 0 0 0 0 transparent;
+  --card-glow-coffee: 0 0 0 0 transparent;
+  --card-glow-question: 0 0 0 0 transparent;
+
+  --card-text-0: #22223a;
+  --card-text-1: #241048;
+  --card-text-2: #0a2740;
+  --card-text-3: #063b20;
+  --card-text-5: #3a3000;
+  --card-text-8: #3a1a00;
+  --card-text-13: #4a0a0a;
+  --card-text-21: #3a0026;
+  --card-text-coffee: #2a1200;
+  --card-text-question: #060640;
+}
+
+.card[data-value='0'],
+.reveal-card[data-value='0'],
+.vote-summary-value[data-value='0'] {
+  --card-border: var(--card-border-0);
+  --card-fill: var(--card-0);
+  --card-txt: var(--card-text-0);
+  --card-glow: var(--card-glow-0);
+}
+
+.card[data-value='1'],
+.reveal-card[data-value='1'],
+.vote-summary-value[data-value='1'] {
+  --card-border: var(--card-border-1);
+  --card-fill: var(--card-1);
+  --card-txt: var(--card-text-1);
+  --card-glow: var(--card-glow-1);
+}
+
+.card[data-value='2'],
+.reveal-card[data-value='2'],
+.vote-summary-value[data-value='2'] {
+  --card-border: var(--card-border-2);
+  --card-fill: var(--card-2);
+  --card-txt: var(--card-text-2);
+  --card-glow: var(--card-glow-2);
+}
+
+.card[data-value='3'],
+.reveal-card[data-value='3'],
+.vote-summary-value[data-value='3'] {
+  --card-border: var(--card-border-3);
+  --card-fill: var(--card-3);
+  --card-txt: var(--card-text-3);
+  --card-glow: var(--card-glow-3);
+}
+
+.card[data-value='5'],
+.reveal-card[data-value='5'],
+.vote-summary-value[data-value='5'] {
+  --card-border: var(--card-border-5);
+  --card-fill: var(--card-5);
+  --card-txt: var(--card-text-5);
+  --card-glow: var(--card-glow-5);
+}
+
+.card[data-value='8'],
+.reveal-card[data-value='8'],
+.vote-summary-value[data-value='8'] {
+  --card-border: var(--card-border-8);
+  --card-fill: var(--card-8);
+  --card-txt: var(--card-text-8);
+  --card-glow: var(--card-glow-8);
+}
+
+.card[data-value='13'],
+.reveal-card[data-value='13'],
+.vote-summary-value[data-value='13'] {
+  --card-border: var(--card-border-13);
+  --card-fill: var(--card-13);
+  --card-txt: var(--card-text-13);
+  --card-glow: var(--card-glow-13);
+}
+
+.card[data-value='21'],
+.reveal-card[data-value='21'],
+.vote-summary-value[data-value='21'] {
+  --card-border: var(--card-border-21);
+  --card-fill: var(--card-21);
+  --card-txt: var(--card-text-21);
+  --card-glow: var(--card-glow-21);
+}
+
+.card[data-value='coffee'],
+.reveal-card[data-value='coffee'],
+.vote-summary-value[data-value='coffee'] {
+  --card-border: var(--card-border-coffee);
+  --card-fill: var(--card-coffee);
+  --card-txt: var(--card-text-coffee);
+  --card-glow: var(--card-glow-coffee);
+}
+
+.card[data-value='question'],
+.reveal-card[data-value='question'],
+.vote-summary-value[data-value='question'] {
+  --card-border: var(--card-border-question);
+  --card-fill: var(--card-question);
+  --card-txt: var(--card-text-question);
+  --card-glow: var(--card-glow-question);
+}
