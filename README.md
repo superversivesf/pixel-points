@@ -9,7 +9,7 @@ docker build -t pixel-points .
 docker run -p 3000:3000 pixel-points
 ```
 
-Then open `http://localhost:3000/` (or set `PORT` and `-p` to taste). The image is a single Node 22 container — no database, no volumes, nothing else to run.
+Then open `http://localhost:3000/` (host port mapping is free to change via `-p <hostport>:3000`; the container's internal `PORT` is fixed by the Dockerfile `HEALTHCHECK` at 3000, so changing it requires editing the healthcheck too). The image is a single Node 22 container — no database, no volumes, nothing else to run.
 
 ## How it works
 
@@ -55,20 +55,20 @@ Respects `prefers-color-scheme` on first visit; toggle persists for future round
 
 ## Production proxy (nginx)
 
-PIXEL POINTS is built to sit behind an nginx reverse proxy that handles TLS and proxies Socket.IO's WebSocket upgrade. Use this block verbatim:
+PIXEL POINTS is built to sit behind an nginx reverse proxy that handles TLS and proxies Socket.IO's WebSocket upgrade. The app uses root-absolute paths (`/themes.css`, `/app.js`, `/socket.io/`), so it expects to be served at the root of whatever hostname fronts it — use a dedicated vhost or subdomain (e.g. `points.example.com`), not a subpath. Use this block verbatim in that vhost's server context:
 
 ```nginx
-location /pixel-points/ {
-  proxy_pass http://127.0.0.1:3000/;
+location / {
+  proxy_pass http://127.0.0.1:3000;
   proxy_http_version 1.1;
   proxy_set_header Upgrade $http_upgrade;
   proxy_set_header Connection "upgrade";
-  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+  proxy_set_header X-Forwarded-For $remote_addr;
   proxy_read_timeout 300s;
 }
 ```
 
-`X-Forwarded-For` is required — the server uses it to attribute join/create attempts to client IPs for rate limiting.
+`X-Forwarded-For` is required — the server uses it to attribute join/create attempts to client IPs for rate limiting. We use `$remote_addr` rather than `$proxy_add_x_forwarded_for` because the latter appends the client-supplied XFF value, letting an attacker spoof the first entry the app trusts and rotate their rate-limit identity.
 
 ## Rate limits
 
