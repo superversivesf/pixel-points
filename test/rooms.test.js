@@ -66,6 +66,7 @@ describe('registry', () => {
     // disconnect everyone through the API (sets connectedAt)
     for (const sid of [...room.players.keys()]) room.disconnect(sid);
     reg.sweep(); // first observation of empty
+    expect(reg.getRoom(code)).not.toBeNull(); // still alive mid-window
     vi.advanceTimersByTime(ROOM_EMPTY_TTL_MS + 1000);
     reg.sweep();
     expect(() => reg.joinRoom(code, 'px', 'X')).toThrow('Room not found');
@@ -83,10 +84,20 @@ describe('registry', () => {
     expect(room.publicState.countdownRemaining).not.toBe(null);
     room.disconnect('p2'); // grace: countdown continues
     expect(room.publicState.countdownRemaining).not.toBe(null);
-    vi.advanceTimersByTime(DISCONNECT_GRACE_MS + 1000);
-    reg.sweep();
+    const t0 = Date.now();
+    // explicit now: no fake-timer fire, so no reveal can happen — the eviction
+    // path itself (removePlayer -> allVotersVoted false -> _clearCountdown)
+    // must drop the vote and null the countdown
+    reg.sweep(t0 + DISCONNECT_GRACE_MS + 1000);
     expect(room.publicState.countdownRemaining).toBe(null); // vote dropped by eviction
+    expect(room.publicState.phase).toBe('voting'); // no reveal — removePlayer did the work
     vi.useRealTimers();
+  });
+  it('joinRoom propagates Room full at capacity', () => {
+    const reg = createRoomRegistry();
+    const { code } = reg.createRoom('smF', 'Boss'); // SM + 12 = capacity
+    for (let i = 1; i <= 11; i++) reg.joinRoom(code, `pf${i}`, `F${i}`); // 11 players -> full
+    expect(() => reg.joinRoom(code, 'pf12', 'F12')).toThrow('Room full');
   });
   it('reveal broadcaster installed via setRevealBroadcaster fires on engine reveal', () => {
     vi.useFakeTimers();
