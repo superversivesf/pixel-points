@@ -33,6 +33,7 @@ let countdownEndsAt = null;
 let countdownTimer = null;
 let homeError = null;
 let lobbyDescDraft = '';      // preserve SM's typed description across re-renders
+let lobbyDescCaret = null;   // desc input caret to restore after a re-render (M2)
 let consensusChoice = null;   // preserve SM's picked points across re-renders
 let historyOpen = false;      // preserve history panel open state across re-renders
 
@@ -59,6 +60,8 @@ function el(tag, attrs = {}, ...children) {
   }
   return node;
 }
+
+const compact = (nodes) => nodes.filter((n) => n !== null && n !== undefined);
 
 function applyTheme() {
   const stored = localStorage.getItem('pp-theme');
@@ -171,6 +174,7 @@ function resetToHome(message = null) {
   roomCode = null;
   countdownEndsAt = null;
   lobbyDescDraft = '';
+  lobbyDescCaret = null;
   consensusChoice = null;
   historyOpen = false;
   homeError = message;
@@ -501,7 +505,7 @@ function renderReveal() {
 
   const showBigBoard = (you && you.role === 'sm') || isDesktop();
 
-  wrap.append(
+  wrap.append(...compact([
     el('h2', { text: showBigBoard ? 'HANDS UP \u2014 ALL CARDS REVEALED' : 'CARDS REVEALED' }),
     el('div', { class: 'reveal-stats' },
       reveal.spread
@@ -512,7 +516,7 @@ function renderReveal() {
         : null
     ),
     unanimous ? el('p', { class: 'win-banner', text: '\u2605 UNANIMOUS VOTE \u2605' }) : null
-  );
+  ]));
 
   if (showBigBoard) {
     const grid = el('div', { class: 'reveal-grid' });
@@ -615,12 +619,31 @@ function render() {
   const view = state.phase === 'lobby' ? renderLobby()
     : state.phase === 'voting' ? renderVoting()
     : renderReveal();
-  $app.replaceChildren(
+
+  // M2: a room:update during lobby rebuilds the SM's description input.
+  // If it was focused, capture caret before teardown so the rebuild can refocus.
+  const descWasFocused = document.activeElement && document.activeElement.id === 'desc-input';
+  if (descWasFocused) {
+    const $old = document.getElementById('desc-input');
+    lobbyDescCaret = $old ? $old.selectionStart : null;
+  }
+
+  $app.replaceChildren(...compact([
     renderHeader(),
     renderDescription(),
     renderHistory(),
     view
-  );
+  ]));
+
+  if (descWasFocused) {
+    const $desc = document.getElementById('desc-input');
+    if ($desc) {
+      $desc.focus();
+      const pos = lobbyDescCaret != null ? lobbyDescCaret : $desc.value.length;
+      $desc.setSelectionRange(pos, pos);
+    }
+    lobbyDescCaret = null;
+  }
   refreshCountdownClock();
   syncCountdownOverlay();
 }
@@ -643,6 +666,11 @@ socket.on('connect', async () => {
   }
   // Server also emits room:state right after; render from the ack immediately.
   roomCode = localStorage.getItem('pp-room-code') || roomCode;
+  if (res.state) {
+    state = res.state;
+    you = res.state.you ?? you;
+    if (res.state.you && res.state.you.vote !== undefined) selectedVote = res.state.you.vote;
+  }
   render();
 });
 
@@ -658,6 +686,12 @@ socket.on('room:state', (s) => {
 });
 
 socket.on('room:update', (s) => {
+  // Server resets all votes on consensus/revote/newRound; votes only persist
+  // within a phase, so a phase change invalidates our optimistic selection.
+  if (state && s.phase !== state.phase) {
+    selectedVote = null;
+    if (you) you.vote = null;
+  }
   state = { ...s, you };
   render();
 });
