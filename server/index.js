@@ -11,6 +11,70 @@ import { sanitizeName, normalizeCode, sanitizeDescription } from './validation.j
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PUBLIC_DIR = path.join(__dirname, '..', 'public');
 
+// ---- trusted-proxy helpers -------------------------------------------------
+
+// Normalize an IP string: strip IPv6-mapped IPv4 prefix, lowercase, trim.
+function normalizeIp(ip) {
+  if (typeof ip !== 'string') return null;
+  let v = ip.trim().toLowerCase();
+  if (v.startsWith('::ffff:') && v.includes('.')) v = v.slice(7);
+  return v || null;
+}
+
+// Parse "a.b.c.d" / CIDR entries into a list of {ip, prefixLen} where
+// prefixLen 32/128 means exact match. Returns null on empty input.
+function parseProxyList(raw) {
+  const entries = raw.split(',').map((s) => s.trim()).filter(Boolean);
+  if (!entries.length) return null;
+  return entries.map((entry) => {
+    if (entry.includes('/')) {
+      const [base, bits] = entry.split('/');
+      return { base: normalizeIp(base), bits: Number(bits) };
+    }
+    return { base: normalizeIp(entry), bits: null };
+  }).filter((e) => e.base !== null);
+}
+
+function isTrustedProxy(ip, list) {
+  const v = normalizeIp(ip);
+  if (v === null) return false;
+  return list.some(({ base, bits }) => {
+    if (bits === null) return v === base;
+    return ipInCidr(v, base, bits);
+  });
+}
+
+function ipToBigInt(ip) {
+  if (ip.includes(':')) {
+    // Expand :: and parse 8 x 16-bit groups into a 128-bit BigInt.
+    let head = ip, tail = '';
+    if (ip.includes('::')) [head, tail = ''] = ip.split('::');
+    const h = head ? head.split(':') : [];
+    const t = tail !== '' || ip.endsWith('::') ? (tail ? tail.split(':') : []) : [];
+    const hParts = h.filter(Boolean).map((g) => BigInt(parseInt(g || '0', 16)));
+    const tParts = t.filter(Boolean).map((g) => BigInt(parseInt(g || '0', 16)));
+    const missing = 8 - hParts.length - tParts.length;
+    const groups = [...hParts, ...Array(Math.max(0, missing)).fill(0n), ...tParts];
+    return groups.reduce((acc, g) => (acc << 16n) | (g & 0xffffn), 0n);
+  }
+  return ip.split('.').reduce((acc, o) => (acc << 8n) | BigInt(o), 0n);
+}
+
+function ipBitsFor(ip) {
+  return ip.includes(':') ? 128 : 32;
+}
+
+function ipInCidr(ip, base, bits) {
+  if (ip.includes(':') !== base.includes(':')) return false;
+  const width = BigInt(ipBitsFor(ip));
+  const b = BigInt(bits);
+  if (b < 0n || b > width) return false;
+  const shift = width - b;
+  return (ipToBigInt(ip) >> shift) === (ipToBigInt(base) >> shift);
+}
+
+export const _internal = { normalizeIp, parseProxyList, isTrustedProxy, ipToBigInt, ipInCidr };
+
 export async function startServer({ port = 0 } = {}) {
   const reg = createRoomRegistry();
   const joinLimiter = createRateLimiter({ windowMs: 60_000, max: 20 });
@@ -54,11 +118,15 @@ export async function startServer({ port = 0 } = {}) {
   // Trust X-Forwarded-For only when the connection comes from a known reverse
   // proxy; direct connections use their real address (prevents IP spoofing to
   // bypass rate limits when the Node port is reachable without the proxy).
-  const TRUSTED_PROXIES = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
+  // TRUSTED_PROXIES env: comma-separated IPs/CIDRs (e.g. "127.0.0.1,::1,172.16.0.0/12").
+  // Empty/unset → loopback only. Invalid entries are dropped by parseProxyList.
+  const trustedProxies = parseProxyList(process.env.TRUSTED_PROXIES ?? '')
+    ?? parseProxyList('127.0.0.1,::1,::ffff:127.0.0.1');
   const ipOf = (socket) => {
-    const direct = socket.handshake.address;
-    if (TRUSTED_PROXIES.has(direct)) {
-      return socket.request.headers['x-forwarded-for']?.split(',')[0].trim() ?? direct;
+    const direct = normalizeIp(socket.handshake.address);
+    if (isTrustedProxy(direct, trustedProxies)) {
+      const xff = socket.request.headers['x-forwarded-for']?.split(',')[0].trim();
+      return (xff && normalizeIp(xff)) ?? direct;
     }
     return direct;
   };
