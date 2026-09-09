@@ -273,7 +273,8 @@ function renderHome() {
     el('p', { class: 'error', text: homeError || '' }),
     createForm,
     el('hr', { class: 'divider' }),
-    joinForm
+    joinForm,
+    renderFooter()
   );
 }
 
@@ -285,6 +286,50 @@ function restoreJoinInput(code, name) {
     $name.value = name;
     $name.focus();
   }
+}
+
+/* ------------------------------ footer / attribution ------------------------------ */
+
+const GH_REPO_URL = 'https://github.com/superversivesf/pixel-points';
+const ORIGINAL_GAME_URL = 'https://planningpoker.com/';
+
+function ghLogo(size = 18) {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 16 16');
+  svg.setAttribute('width', size);
+  svg.setAttribute('height', size);
+  svg.setAttribute('aria-hidden', 'true');
+  svg.classList.add('gh-logo');
+  const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+  path.setAttribute('fill', 'currentColor');
+  path.setAttribute('d', 'M8 0C3.58 0 0 3.58 0 8c0 3.54 2.31 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z');
+  svg.append(path);
+  return svg;
+}
+
+function renderFooter() {
+  const ghLink = el('a', {
+    href: GH_REPO_URL, target: '_blank', rel: 'noopener', class: 'gh-link',
+    'aria-label': 'View the source on GitHub',
+  });
+  ghLink.append(ghLogo());
+  ghLink.append(el('span', { text: 'source on GitHub' }));
+
+  const original = el('a', {
+    href: ORIGINAL_GAME_URL, target: '_blank', rel: 'noopener',
+    text: 'Planning Poker',
+  });
+
+  return el('footer', { class: 'footer' },
+    el('p', { class: 'footer-game' },
+      'A homage to the card game ', original,
+      '. Not affiliated \u2014 get the original kit at planningpoker.com.'
+    ),
+    el('p', { class: 'footer-links' },
+      el('a', { href: '/help.html', class: 'help-link', text: 'HOW TO PLAY' }),
+      ghLink
+    )
+  );
 }
 
 /* ------------------------------ render: room chrome ------------------------------ */
@@ -655,7 +700,8 @@ function render() {
     renderHeader(),
     renderDescription(),
     renderHistory(),
-    view
+    view,
+    renderFooter()
   ]));
 
   if (descWasFocused) {

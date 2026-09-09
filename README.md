@@ -77,7 +77,21 @@ location / {
 
 ## Font
 
-The pixel font (**Press Start 2P**, SIL OFL-licensed — see `public/fonts/OFL.txt`) is bundled locally in the image. No CDN, no Google Fonts request — the app renders offline and behind air-gapped proxies.
+The pixel font (**Press Start 2P**, SIL OFL-licensed — see `public/fonts/OFL.txt`) and the readable mono themes' font (**JetBrains Mono**, OFL-licensed — see `public/fonts/OFL-JetBrainsMono.txt`) are bundled locally in the image. No CDN, no Google Fonts request — the app renders offline and behind air-gapped proxies.
+
+## How to play
+
+An in-app guide lives at **`/help.html`** (linked as "HOW TO PLAY" in every footer). It walks through rooms, the card deck, the 5-second auto-reveal, and the Consensus / Re-vote / New Round flow.
+
+## Attribution
+
+PIXEL POINTS is a homage to the card game [Planning Poker](https://planningpoker.com/). It is not affiliated with or endorsed by the original creators — if you want the original professional kit, [get it here](https://planningpoker.com/).
+
+Source: [github.com/superversivesf/pixel-points](https://github.com/superversivesf/pixel-points)
+
+## License
+
+Released under the [MIT License](LICENSE). The bundled fonts are under their own SIL Open Font License 1.1 terms (see `public/fonts/`).
 
 ## Data disclaimer
 

@@ -715,3 +715,59 @@ button.danger {
   .stat-chip { font-size: 14px; }
   #overlay .big-countdown { font-size: 160px; }
 }
+/* ---------- Footer / attribution ---------- */
+.footer {
+  margin-top: 36px;
+  padding-top: 14px;
+  border-top: 2px solid var(--border);
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.footer a { color: var(--accent); text-decoration: underline; }
+.footer a:visited { color: var(--accent); }
+
+.footer-links {
+  display: flex;
+  gap: 18px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.gh-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none !important;
+}
+.gh-logo { vertical-align: middle; }
+
+/* ---------- Help page ---------- */
+.help-page section {
+  margin-bottom: 22px;
+  padding: 14px;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+}
+.help-page .help-sub {
+  font-family: var(--font-head);
+  font-size: 12px;
+  color: var(--accent);
+  text-align: center;
+  margin: 0 0 20px 0;
+}
+.help-page ul { padding-left: 20px; }
+.help-page li { margin: 6px 0; }
+.help-back {
+  text-align: center;
+  margin: 26px 0;
+  font-family: var(--font-head);
+  font-size: 12px;
+}
+.help-back a { color: var(--accent); text-decoration: none; }
