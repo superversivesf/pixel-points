@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { GameRoom, REVEAL_DELAY_MS } from '../server/game.js';
+import { GameRoom, REVEAL_DELAY_MS, MAX_HISTORY } from '../server/game.js';
 
 afterEach(() => vi.useRealTimers());
 
@@ -217,13 +217,13 @@ describe('abandon round', () => {
     vi.advanceTimersByTime(REVEAL_DELAY_MS * 3);
     expect(room.publicState.phase).toBe('lobby'); // no pending timer fires a reveal
   });
-  it('abandoned description is recoverable via lastDescription', () => {
+  it('abandon clears description entirely', () => {
     vi.useFakeTimers();
     const room = roomWithVoters(2);
     room.castVote('p0', '5'); room.castVote('p1', '8');
     room.abandonRound('sm');
-    expect(room.lastDescription).toBe('Fix the login bug');
     expect(room.publicState.description).toBe('');
+    vi.useRealTimers();
   });
   it('abandon rejected from reveal phase', () => {
     vi.useFakeTimers();
@@ -240,5 +240,24 @@ describe('abandon round', () => {
   it('non-SM cannot abandon', () => {
     const room = roomWithVoters(2);
     expect(() => room.abandonRound('p0')).toThrow();
+  });
+});
+describe('history cap', () => {
+  it('history is capped at MAX_HISTORY entries', () => {
+    vi.useFakeTimers();
+    const room = new GameRoom('TEST');
+    room.addSm('sm', 'Boss');
+    room.addPlayer('p1', 'A');
+    room.addPlayer('p2', 'B');
+    for (let i = 0; i < MAX_HISTORY + 10; i++) {
+      room.startRound('sm', `story ${i}`);
+      room.castVote('p1', '1');
+      room.castVote('p2', '2');
+      vi.advanceTimersByTime(REVEAL_DELAY_MS);
+      room.consensus('sm', '1');
+    }
+    expect(room.publicState.history.length).toBe(MAX_HISTORY);
+    expect(room.publicState.history[0].description).toBe(`story ${MAX_HISTORY + 9}`);
+    vi.useRealTimers();
   });
 });

@@ -3,6 +3,7 @@ import { NUMERIC_DECK, isValidVote, sanitizeDescription } from './validation.js'
 export const REVEAL_DELAY_MS = 5000;
 const MAX_PLAYERS = 12;
 const MIN_VOTERS = 2;
+export const MAX_HISTORY = 500;
 
 export class GameRoom {
   constructor(roomCode, { onCountdownEnd = () => {} } = {}) {
@@ -152,6 +153,7 @@ export class GameRoom {
     if (this.phase !== 'reveal') throw new Error('Nothing to decide');
     if (!NUMERIC_DECK.includes(String(points))) throw new Error('Invalid points');
     this.history.unshift({ description: this.description, points: Number(points), time: Date.now() });
+    if (this.history.length > MAX_HISTORY) this.history.length = MAX_HISTORY;
     this.phase = 'lobby';
     this.description = '';
     for (const pl of this.players.values()) { pl.vote = null; pl.voted = false; }
@@ -177,7 +179,6 @@ export class GameRoom {
     this._requireSm(sessionId);
     if (this.phase !== 'voting') throw new Error('Only during voting');
     this._clearCountdown();
-    this.lastDescription = this.description;
     this.phase = 'lobby';
     this.description = '';
     for (const pl of this.players.values()) { pl.vote = null; pl.voted = false; }

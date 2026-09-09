@@ -21,7 +21,11 @@ export async function startServer({ port = 0 } = {}) {
   app.get('/healthz', (_req, res) => res.send('ok'));
 
   const httpServer = http.createServer(app);
-  const io = new Server(httpServer);
+  const io = new Server(httpServer, {
+    maxHttpBufferSize: 1e6,
+    perMessageDeflate: { threshold: 1024 },
+    connectTimeout: 10_000,
+  });
 
   function stateFor(room, sessionId) {
     const state = room.publicState;
@@ -47,9 +51,17 @@ export async function startServer({ port = 0 } = {}) {
     if (room) broadcastRoom(room);
   });
 
-  const ipOf = (socket) =>
-    socket.request.headers['x-forwarded-for']?.split(',')[0].trim()
-    ?? socket.handshake.address;
+  // Trust X-Forwarded-For only when the connection comes from a known reverse
+  // proxy; direct connections use their real address (prevents IP spoofing to
+  // bypass rate limits when the Node port is reachable without the proxy).
+  const TRUSTED_PROXIES = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
+  const ipOf = (socket) => {
+    const direct = socket.handshake.address;
+    if (TRUSTED_PROXIES.has(direct)) {
+      return socket.request.headers['x-forwarded-for']?.split(',')[0].trim() ?? direct;
+    }
+    return direct;
+  };
 
   const LOCKED_MSG = 'Too many attempts. Try again in a few minutes.';
 
@@ -98,8 +110,8 @@ export async function startServer({ port = 0 } = {}) {
       socket.data.token = out.token;
       socket.join(code);
       ack({ ok: true, code, token: out.token, name: out.player.name, state: stateFor(out.room, sessionId) });
-      broadcastRoom(out.room);
       socket.emit('room:state', stateFor(out.room, sessionId));
+      broadcastRoom(out.room);
     });
 
     socket.on('session:resume', (data, ack) => {
@@ -110,8 +122,8 @@ export async function startServer({ port = 0 } = {}) {
       socket.join(hit.room.code);
       hit.room.reconnect(hit.sessionId);
       ack({ ok: true, state: stateFor(hit.room, hit.sessionId) });
-      broadcastRoom(hit.room);
       socket.emit('room:state', stateFor(hit.room, hit.sessionId));
+      broadcastRoom(hit.room);
     });
 
     const withRoom = (fn) => (data, ack) => {
@@ -147,9 +159,11 @@ export async function startServer({ port = 0 } = {}) {
       room.abandonRound(sessionId);
     }));
 
-    socket.on('room:leave', (data, ack) => {
+    socket.on('room:leave', (_data, ack) => {
       ack = ackOr(ack);
-      const token = data?.token || socket.data.token;
+      // Security: only the socket's own session token may be used — never a
+      // client-supplied one (prevents forced eviction of other players).
+      const token = socket.data.token;
       if (!token) return ack({ ok: false, error: 'no session' });
       const hit = reg.getBySession(token);
       if (!hit) return ack({ ok: false, error: 'session expired' });

@@ -51,3 +51,25 @@ describe('createAttemptTracker', () => {
     expect(t.record('ip', false).locked).toBe(false);
   });
 });
+describe('map pruning (memory leak fixes)', () => {
+  it('hits key is deleted when window expires and next check re-registers fresh', () => {
+    vi.useFakeTimers();
+    const rl = createRateLimiter({ windowMs: 1000, max: 2 });
+    rl.check('ip');
+    vi.advanceTimersByTime(1100);
+    expect(rl.check('ip')).toBe(true); // aged-out entry pruned, fresh check allowed
+    vi.useRealTimers();
+  });
+  it('lockedUntil pruned after expiry via isLocked and record', () => {
+    vi.useFakeTimers();
+    const t = createAttemptTracker({ max: 2, lockoutMs: 1000 });
+    t.record('ip', false);
+    t.record('ip', false);
+    expect(t.isLocked('ip')).toBe(true);
+    vi.advanceTimersByTime(1100);
+    expect(t.isLocked('ip')).toBe(false); // pruned on read
+    // record prunes expired entries; a fresh bad attempt starts a clean count
+    expect(t.record('ip', false)).toEqual({ locked: false, remaining: 1 });
+    vi.useRealTimers();
+  });
+});

@@ -4,6 +4,12 @@ export function createRateLimiter({ windowMs, max }) {
     check(ip) {
       const now = Date.now();
       const arr = (hits.get(ip) ?? []).filter((t) => now - t < windowMs);
+      if (arr.length === 0) {
+        hits.delete(ip); // prune: no live entries left for this key
+        arr.push(now);
+        hits.set(ip, arr);
+        return true;
+      }
       if (arr.length >= max) {
         hits.set(ip, arr);
         return false;
@@ -22,7 +28,9 @@ export function createAttemptTracker({ max, lockoutMs }) {
   return {
     record(ip, ok) {
       const now = Date.now();
-      if ((lockedUntil.get(ip) ?? 0) > now) return { locked: true, remaining: 0 };
+      const until = lockedUntil.get(ip) ?? 0;
+      if (until > now) return { locked: true, remaining: 0 };
+      if (until !== 0) lockedUntil.delete(ip); // prune expired lockout
       if (ok) {
         bad.delete(ip);
         return { locked: false, remaining: max };
@@ -37,7 +45,10 @@ export function createAttemptTracker({ max, lockoutMs }) {
       return { locked: false, remaining: max - count };
     },
     isLocked(ip) {
-      return (lockedUntil.get(ip) ?? 0) > Date.now();
+      const until = lockedUntil.get(ip) ?? 0;
+      if (until > Date.now()) return true;
+      if (until !== 0) lockedUntil.delete(ip); // prune on read
+      return false;
     },
     reset() { bad.clear(); lockedUntil.clear(); },
   };

@@ -4,3 +4,11 @@ node_modules
 test
 docs
 *.md
+.env
+.env.*
+.npmrc
+.ssh
+.aws
+.docker
+Dockerfile
+*.secret

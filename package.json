@@ -21,6 +21,9 @@
   },
   "devDependencies": {
     "socket.io-client": "^4.8.3",
-    "vitest": "^2.1.0"
+    "vitest": "^4.1.11"
+  },
+  "overrides": {
+    "qs": "^6.16.0"
   }
 }
