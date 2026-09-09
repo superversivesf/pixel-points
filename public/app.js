@@ -23,6 +23,8 @@ const THEMES = [
   { id: 'crt-light', label: 'CRT Neon (light)' },
   { id: 'pixel-dark', label: 'Pixel Pop (dark)' },
   { id: 'pixel-light', label: 'Pixel Pop (light)' },
+  { id: 'mono-dark', label: 'Mono (dark)' },
+  { id: 'mono-light', label: 'Mono (light)' },
 ];
 
 let state = null;

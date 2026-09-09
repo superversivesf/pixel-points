@@ -4,6 +4,13 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/JetBrainsMono-Regular.ttf') format('truetype');
+  font-weight: 100 800;
+  font-display: swap;
+}
+
 :root {
   --font-head: 'Press Start 2P', 'Courier New', monospace;
   --font-body: 'Courier New', monospace;
@@ -258,6 +265,146 @@ html[data-theme='pixel-light'] {
   --card-text-21: #3a0026;
   --card-text-coffee: #2a1200;
   --card-text-question: #060640;
+}
+
+/* ---------- Mono themes: readable, editor-style, no retro effects ---------- */
+
+html[data-theme='mono-dark'] {
+  --font-head: 'JetBrains Mono', 'Courier New', monospace;
+  --font-body: 'JetBrains Mono', 'Courier New', monospace;
+
+  --bg: #1e1f22;
+  --fg: #dcdfe4;
+  --muted: #7a7d85;
+  --panel: #2b2d30;
+  --border: #43454a;
+  --accent: #57c7ff;
+  --accent-2: #c77dba;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  --radius: 8px;
+  --card-selected: #ffffff;
+  --overlay-bg: rgba(24, 25, 28, 0.92);
+  --scanlines: 0;
+  --vignette: 0;
+
+  --card-0: color-mix(in srgb, var(--hue-0) 22%, #1e1f22);
+  --card-1: color-mix(in srgb, var(--hue-1) 22%, #1e1f22);
+  --card-2: color-mix(in srgb, var(--hue-2) 22%, #1e1f22);
+  --card-3: color-mix(in srgb, var(--hue-3) 22%, #1e1f22);
+  --card-5: color-mix(in srgb, var(--hue-5) 22%, #1e1f22);
+  --card-8: color-mix(in srgb, var(--hue-8) 22%, #1e1f22);
+  --card-13: color-mix(in srgb, var(--hue-13) 22%, #1e1f22);
+  --card-21: color-mix(in srgb, var(--hue-21) 22%, #1e1f22);
+  --card-coffee: color-mix(in srgb, var(--hue-coffee) 22%, #1e1f22);
+  --card-question: color-mix(in srgb, var(--hue-question) 22%, #1e1f22);
+
+  --card-border-0: color-mix(in srgb, var(--hue-0) 60%, #1e1f22);
+  --card-border-1: color-mix(in srgb, var(--hue-1) 60%, #1e1f22);
+  --card-border-2: color-mix(in srgb, var(--hue-2) 60%, #1e1f22);
+  --card-border-3: color-mix(in srgb, var(--hue-3) 60%, #1e1f22);
+  --card-border-5: color-mix(in srgb, var(--hue-5) 60%, #1e1f22);
+  --card-border-8: color-mix(in srgb, var(--hue-8) 60%, #1e1f22);
+  --card-border-13: color-mix(in srgb, var(--hue-13) 60%, #1e1f22);
+  --card-border-21: color-mix(in srgb, var(--hue-21) 60%, #1e1f22);
+  --card-border-coffee: color-mix(in srgb, var(--hue-coffee) 60%, #1e1f22);
+  --card-border-question: color-mix(in srgb, var(--hue-question) 60%, #1e1f22);
+
+  --card-glow-0: 0 0 0 0 transparent;
+  --card-glow-1: 0 0 0 0 transparent;
+  --card-glow-2: 0 0 0 0 transparent;
+  --card-glow-3: 0 0 0 0 transparent;
+  --card-glow-5: 0 0 0 0 transparent;
+  --card-glow-8: 0 0 0 0 transparent;
+  --card-glow-13: 0 0 0 0 transparent;
+  --card-glow-21: 0 0 0 0 transparent;
+  --card-glow-coffee: 0 0 0 0 transparent;
+  --card-glow-question: 0 0 0 0 transparent;
+
+  --card-text-0: #b8bcc2;
+  --card-text-1: var(--hue-1);
+  --card-text-2: var(--hue-2);
+  --card-text-3: var(--hue-3);
+  --card-text-5: var(--hue-5);
+  --card-text-8: var(--hue-8);
+  --card-text-13: var(--hue-13);
+  --card-text-21: var(--hue-21);
+  --card-text-coffee: var(--hue-coffee);
+  --card-text-question: var(--hue-question);
+}
+
+html[data-theme='mono-light'] {
+  --font-head: 'JetBrains Mono', 'Courier New', monospace;
+  --font-body: 'JetBrains Mono', 'Courier New', monospace;
+
+  --bg: #fafafa;
+  --fg: #1f2328;
+  --muted: #6e7781;
+  --panel: #ffffff;
+  --border: #d0d7de;
+  --accent: #0969da;
+  --accent-2: #bf3989;
+  --shadow: 0 1px 4px rgba(31, 35, 40, 0.12);
+  --radius: 8px;
+  --card-selected: #1f2328;
+  --overlay-bg: rgba(250, 250, 250, 0.94);
+  --scanlines: 0;
+  --vignette: 0;
+
+  --card-0: color-mix(in srgb, var(--hue-0) 12%, white);
+  --card-1: color-mix(in srgb, var(--hue-1) 12%, white);
+  --card-2: color-mix(in srgb, var(--hue-2) 12%, white);
+  --card-3: color-mix(in srgb, var(--hue-3) 12%, white);
+  --card-5: color-mix(in srgb, var(--hue-5) 12%, white);
+  --card-8: color-mix(in srgb, var(--hue-8) 12%, white);
+  --card-13: color-mix(in srgb, var(--hue-13) 12%, white);
+  --card-21: color-mix(in srgb, var(--hue-21) 12%, white);
+  --card-coffee: color-mix(in srgb, var(--hue-coffee) 12%, white);
+  --card-question: color-mix(in srgb, var(--hue-question) 12%, white);
+
+  --card-border-0: color-mix(in srgb, var(--hue-0) 55%, #d0d7de);
+  --card-border-1: color-mix(in srgb, var(--hue-1) 55%, #d0d7de);
+  --card-border-2: color-mix(in srgb, var(--hue-2) 55%, #d0d7de);
+  --card-border-3: color-mix(in srgb, var(--hue-3) 55%, #d0d7de);
+  --card-border-5: color-mix(in srgb, var(--hue-5) 55%, #d0d7de);
+  --card-border-8: color-mix(in srgb, var(--hue-8) 55%, #d0d7de);
+  --card-border-13: color-mix(in srgb, var(--hue-13) 55%, #d0d7de);
+  --card-border-21: color-mix(in srgb, var(--hue-21) 55%, #d0d7de);
+  --card-border-coffee: color-mix(in srgb, var(--hue-coffee) 55%, #d0d7de);
+  --card-border-question: color-mix(in srgb, var(--hue-question) 55%, #d0d7de);
+
+  --card-glow-0: 0 0 0 0 transparent;
+  --card-glow-1: 0 0 0 0 transparent;
+  --card-glow-2: 0 0 0 0 transparent;
+  --card-glow-3: 0 0 0 0 transparent;
+  --card-glow-5: 0 0 0 0 transparent;
+  --card-glow-8: 0 0 0 0 transparent;
+  --card-glow-13: 0 0 0 0 transparent;
+  --card-glow-21: 0 0 0 0 transparent;
+  --card-glow-coffee: 0 0 0 0 transparent;
+  --card-glow-question: 0 0 0 0 transparent;
+
+  --card-text-0: #57606a;
+  --card-text-1: color-mix(in srgb, var(--hue-1) 80%, black);
+  --card-text-2: color-mix(in srgb, var(--hue-2) 80%, black);
+  --card-text-3: color-mix(in srgb, var(--hue-3) 70%, black);
+  --card-text-5: color-mix(in srgb, var(--hue-5) 85%, black);
+  --card-text-8: color-mix(in srgb, var(--hue-8) 80%, black);
+  --card-text-13: color-mix(in srgb, var(--hue-13) 80%, black);
+  --card-text-21: color-mix(in srgb, var(--hue-21) 80%, black);
+  --card-text-coffee: color-mix(in srgb, var(--hue-coffee) 80%, black);
+  --card-text-question: color-mix(in srgb, var(--hue-question) 80%, black);
+}
+
+/* Mono themes: strip neon text-shadows for a clean editor look */
+html[data-theme='mono-dark'] .wordmark,
+html[data-theme='mono-light'] .wordmark,
+html[data-theme='mono-dark'] .room-code,
+html[data-theme='mono-light'] .room-code,
+html[data-theme='mono-dark'] .description,
+html[data-theme='mono-light'] .description,
+html[data-theme='mono-dark'] .big-countdown,
+html[data-theme='mono-light'] .big-countdown {
+  text-shadow: none;
 }
 
 .card[data-value='0'],
