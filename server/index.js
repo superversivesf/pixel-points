@@ -143,6 +143,23 @@ export async function startServer({ port = 0 } = {}) {
     socket.on('round:new', withRoom(({ room, sessionId }) => {
       room.newRound(sessionId);
     }));
+    socket.on('round:abandon', withRoom(({ room, sessionId }) => {
+      room.abandonRound(sessionId);
+    }));
+
+    socket.on('room:leave', (data, ack) => {
+      ack = ackOr(ack);
+      const token = data?.token || socket.data.token;
+      if (!token) return ack({ ok: false, error: 'no session' });
+      const hit = reg.getBySession(token);
+      if (!hit) return ack({ ok: false, error: 'session expired' });
+      const room = hit.room;
+      reg.leaveRoom(token); // removes player + session; recomputes countdown
+      socket.leave(room.code);
+      delete socket.data.token;
+      broadcastRoom(room);
+      ack({ ok: true });
+    });
 
     socket.on('disconnect', () => {
       const token = socket.data.token;

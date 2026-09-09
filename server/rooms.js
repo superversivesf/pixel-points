@@ -60,6 +60,16 @@ export function createRoomRegistry() {
 
     removeSession(token) { sessions.delete(token); },
 
+    leaveRoom(token) {
+      const s = sessions.get(token);
+      if (!s) return { ok: false };
+      const room = rooms.get(s.roomCode);
+      sessions.delete(token);
+      if (!room) return { ok: true };
+      room.removePlayer(s.sessionId); // recomputes countdown; drops vote
+      return { ok: true, room };
+    },
+
     sweep(now = Date.now()) {
       for (const [code, room] of rooms) {
         for (const [sid, p] of room.players) {

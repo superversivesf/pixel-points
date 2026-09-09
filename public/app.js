@@ -1,6 +1,6 @@
 /* PIXEL POINTS client. Consumes the Task 5 wire contract exactly:
    C→S acks: room:create, room:join, session:resume, round:start, vote:cast,
-            round:consensus, round:revote, round:new
+             round:consensus, round:revote, round:new, round:abandon, room:leave
    S→C: room:state (individual, includes you), room:update (broadcast, no you). */
 
 const socket = io();
@@ -306,12 +306,23 @@ function renderHeader() {
 
   const smOnline = state.players.some((p) => p.role === 'sm' && p.connected);
 
+  const leaveBtn = el('button', {
+    class: 'leave-btn',
+    text: 'LEAVE',
+    onclick: async () => {
+      if (!confirm('Leave this room? You can rejoin with the room code while it stays open.')) return;
+      await emitAck('room:leave', {});
+      resetToHome();
+    },
+  });
+
   return el('header', { class: 'header' },
     el('div', { class: 'header-top' },
       el('p', { class: 'wordmark', text: 'PIXEL POINTS' }),
       el('div', { class: 'header-controls' },
         el('span', { class: 'phase-chip', text: phaseLabel(state.phase) }),
-        themeSelect
+        themeSelect,
+        leaveBtn
       )
     ),
     smOnline ? null : el('p', { class: 'sm-waiting', text: 'SM RECONNECTING\u2026' }),
@@ -446,6 +457,16 @@ function renderVoting() {
       ));
     }
     wrap.append(grid);
+    const abandonBtn = el('button', {
+      class: 'abandon-btn',
+      text: 'ABANDON ROUND',
+      onclick: async () => {
+        if (!confirm('Abandon this round? All votes are discarded and you return to the lobby.')) return;
+        const res = await emitAck('round:abandon', {});
+        if (!res || !res.ok) showOverlay('notice', (res && res.error) || 'Could not abandon the round.');
+      },
+    });
+    wrap.append(abandonBtn);
   } else {
     wrap.append(el('h2', { text: 'PICK YOUR CARD' }));
     const hand = el('div', { class: 'hand' });

@@ -116,3 +116,54 @@ describe('registry', () => {
     vi.useRealTimers();
   });
 });
+describe('leaveRoom', () => {
+  it('removes the player and invalidates their token; room stays for others', () => {
+    const { reg, code } = make();
+    const { token, player } = reg.joinRoom(code, 'pz', 'Zed');
+    expect(reg.leaveRoom(token).ok).toBe(true);
+    expect(reg.getBySession(token)).toBeNull();
+    void player;
+    const room = reg.getRoom(code);
+    expect(room).not.toBeNull();
+    expect(room.players.has('pz')).toBe(false);
+  });
+  it('dropping a voter recomputes the countdown', () => {
+    vi.useFakeTimers();
+    const reg = createRoomRegistry();
+    const smToken = reg.createRoom('smD', 'Boss').token;
+    const { code } = { code: reg.getBySession(smToken).room.code };
+    const t1 = reg.joinRoom(code, 'p1', 'A').token;
+    const t2 = reg.joinRoom(code, 'p2', 'B').token;
+    const room = reg.getRoom(code);
+    room.startRound('smD', 'd');
+    room.castVote('p1', '5');
+    room.castVote('p2', '8');
+    expect(room.publicState.countdownRemaining).not.toBe(null);
+    reg.leaveRoom(t1); // p1 leaves with a vote in flight
+    expect(room.publicState.countdownRemaining).toBe(null); // stopped
+    // p2 re-votes alone: only 1 voter -> still blocked (MIN_VOTERS)
+    room.castVote('p2', '5');
+    expect(room.publicState.countdownRemaining).toBe(null);
+    void t2;
+    vi.useRealTimers();
+  });
+  it('leaving with an unknown/invalid token reports not ok', () => {
+    const reg = createRoomRegistry();
+    expect(reg.leaveRoom('nope').ok).toBe(false);
+  });
+  it('empty room still lingers after SM leaves (sweep TTL applies)', () => {
+    vi.useFakeTimers();
+    const reg = createRoomRegistry();
+    const { code, token } = reg.createRoom('smL', 'Boss');
+    expect(reg.leaveRoom(token).ok).toBe(true);
+    reg.sweep(); // first observation of empty
+    expect(reg.getRoom(code)).not.toBeNull(); // lingers immediately after
+    vi.advanceTimersByTime(ROOM_EMPTY_TTL_MS - 1000);
+    reg.sweep();
+    expect(reg.getRoom(code)).not.toBeNull(); // still within TTL
+    vi.advanceTimersByTime(2000);
+    reg.sweep();
+    expect(reg.getRoom(code)).toBeNull(); // gone after TTL
+    vi.useRealTimers();
+  });
+});

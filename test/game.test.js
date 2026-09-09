@@ -203,3 +203,42 @@ describe('reveal outcomes', () => {
     expect(() => room.newRound('p0')).toThrow();
   });
 });
+
+describe('abandon round', () => {
+  it('SM can abandon a voting round: votes wiped, countdown stopped, back to lobby', () => {
+    vi.useFakeTimers();
+    const room = roomWithVoters(3);
+    room.castVote('p0', '5'); room.castVote('p1', '8'); room.castVote('p2', '13');
+    expect(room.publicState.countdownRemaining).not.toBe(null);
+    room.abandonRound('sm');
+    expect(room.publicState.phase).toBe('lobby');
+    expect(room.publicState.countdownRemaining).toBe(null);
+    expect(room.publicState.players.every((p) => !p.voted || p.role === 'sm')).toBe(true);
+    vi.advanceTimersByTime(REVEAL_DELAY_MS * 3);
+    expect(room.publicState.phase).toBe('lobby'); // no pending timer fires a reveal
+  });
+  it('abandoned description is recoverable via lastDescription', () => {
+    vi.useFakeTimers();
+    const room = roomWithVoters(2);
+    room.castVote('p0', '5'); room.castVote('p1', '8');
+    room.abandonRound('sm');
+    expect(room.lastDescription).toBe('Fix the login bug');
+    expect(room.publicState.description).toBe('');
+  });
+  it('abandon rejected from reveal phase', () => {
+    vi.useFakeTimers();
+    const room = roomWithVoters(2);
+    room.castVote('p0', '5'); room.castVote('p1', '8');
+    vi.advanceTimersByTime(REVEAL_DELAY_MS);
+    expect(() => room.abandonRound('sm')).toThrow();
+  });
+  it('abandon rejected from lobby', () => {
+    const room = roomWithVoters(2);
+    room.abandonRound('sm'); // first abandon lands in lobby
+    expect(() => room.abandonRound('sm')).toThrow();
+  });
+  it('non-SM cannot abandon', () => {
+    const room = roomWithVoters(2);
+    expect(() => room.abandonRound('p0')).toThrow();
+  });
+});

@@ -173,6 +173,16 @@ export class GameRoom {
     for (const pl of this.players.values()) { pl.vote = null; pl.voted = false; }
   }
 
+  abandonRound(sessionId) {
+    this._requireSm(sessionId);
+    if (this.phase !== 'voting') throw new Error('Only during voting');
+    this._clearCountdown();
+    this.lastDescription = this.description;
+    this.phase = 'lobby';
+    this.description = '';
+    for (const pl of this.players.values()) { pl.vote = null; pl.voted = false; }
+  }
+
   get publicState() {
     return {
       phase: this.phase,

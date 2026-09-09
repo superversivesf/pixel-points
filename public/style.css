@@ -104,6 +104,35 @@ h3 { font-size: 12px; margin: 0 0 8px; }
   flex-wrap: wrap;
 }
 
+/* Leave button (header) */
+.leave-btn {
+  font-family: var(--font-head);
+  font-size: 9px;
+  padding: 7px 10px;
+  border: 2px solid #e74c3c;
+  border-radius: var(--radius);
+  background: transparent;
+  color: #e74c3c;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+.leave-btn:hover { background: #e74c3c; color: #fff; }
+
+/* Abandon round button (SM vote board) */
+.abandon-btn {
+  font-family: var(--font-head);
+  font-size: 10px;
+  margin-top: 18px;
+  padding: 12px 18px;
+  border: 2px solid #e74c3c;
+  border-radius: var(--radius);
+  background: transparent;
+  color: #e74c3c;
+  letter-spacing: 2px;
+  cursor: pointer;
+}
+.abandon-btn:hover { background: #e74c3c; color: #fff; }
+
 /* SM reconnecting banner */
 .sm-waiting {
   font-family: var(--font-head);

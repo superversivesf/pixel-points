@@ -33,6 +33,13 @@ async function waitFor(cond, { timeout = 8000, interval = 25 } = {}) {
 
 const player = (u, name) => u.players.find((p) => p.name === name);
 
+function lastUpdate(c, pred) {
+  for (let i = c.updates.length - 1; i >= 0; i--) {
+    if (pred(c.updates[i])) return c.updates[i];
+  }
+  return null;
+}
+
 afterEach(async () => {
   for (const c of clients) c.disconnect();
   clients.length = 0;
@@ -200,4 +207,60 @@ describe('PIXEL POINTS integration', () => {
     expect(j2.ok).toBe(true);
     expect(j2.name).toBe('Sam 2');
   }, 10000);
+});
+describe('leave + abandon', () => {
+  it('player leaves mid-vote: token dead, room persists, countdown stops', async () => {
+    const url = await boot();
+    const sm = connect(url);
+    await new Promise((res) => sm.on('connect', res));
+    const create = await emitAck(sm, 'room:create', { name: 'Boss' });
+    const p1 = connect(url);
+    const p2 = connect(url);
+    await new Promise((res) => p1.on('connect', res));
+    await new Promise((res) => p2.on('connect', res));
+    await emitAck(p1, 'room:join', { code: create.code, name: 'A' });
+    const j2 = await emitAck(p2, 'room:join', { code: create.code, name: 'B' });
+    await emitAck(sm, 'round:start', { description: 'd' });
+    await emitAck(p1, 'vote:cast', { value: '5' });
+    await emitAck(p2, 'vote:cast', { value: '8' });
+    const leave = await emitAck(p2, 'room:leave', {});
+    expect(leave.ok).toBe(true);
+    // token invalidated: resume bounces
+    const stale = await emitAck(p2, 'session:resume', { token: j2.token });
+    expect(stale.ok).toBe(false);
+    // p1 can't trigger reveal alone; but re-vote p1 + SM restarts flow later
+    // remaining players see the update with B gone
+    const upd = await vi.waitFor(async () => {
+      const s = lastUpdate(p1, (u) => u.players.length === 2);
+      if (s) return s;
+      throw new Error('waiting');
+    }, { timeout: 5000 });
+    expect(upd.players.some((p) => p.name === 'B')).toBe(false);
+  }, 12000);
+
+  it('SM abandons a voting round: back to lobby, description recoverable', async () => {
+    const url = await boot();
+    const sm = connect(url);
+    await new Promise((res) => sm.on('connect', res));
+    const create = await emitAck(sm, 'room:create', { name: 'Boss' });
+    const p1 = connect(url);
+    const p2 = connect(url);
+    await new Promise((res) => p1.on('connect', res));
+    await new Promise((res) => p2.on('connect', res));
+    await emitAck(p1, 'room:join', { code: create.code, name: 'A' });
+    await emitAck(p2, 'room:join', { code: create.code, name: 'B' });
+    await emitAck(sm, 'round:start', { description: 'wrong story' });
+    await emitAck(p1, 'vote:cast', { value: '5' });
+    const abandon = await emitAck(sm, 'round:abandon', {});
+    expect(abandon.ok).toBe(true);
+    const upd = await vi.waitFor(async () => {
+      const s = lastUpdate(p1, (u) => u.phase === 'lobby');
+      if (s) return s;
+      throw new Error('waiting');
+    }, { timeout: 5000 });
+    expect(upd.description).toBe('');
+    // non-SM abandon rejected
+    const bad = await emitAck(p1, 'round:abandon', {});
+    expect(bad.ok).toBe(false);
+  }, 12000);
 });
