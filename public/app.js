@@ -31,8 +31,6 @@ let state = null;
 let you = null;
 let selectedVote = null;
 let roomCode = null;
-let countdownEndsAt = null;
-let countdownTimer = null;
 let homeError = null;
 let lobbyDescDraft = '';      // preserve SM's typed description across re-renders
 let lobbyDescCaret = null;   // desc input caret to restore after a re-render (M2)
@@ -79,8 +77,8 @@ function setTheme(theme) {
 }
 
 function cardFace(value) {
-  if (value === 'coffee') return { emoji: '\u2615', sub: 'COFFEE' };
-  if (value === 'question') return { emoji: '\u2753', sub: '?' };
+  if (value === 'coffee') return { emoji: '\u2615', sub: null };
+  if (value === 'question') return { emoji: '\u2753', sub: null };
   return { emoji: String(value), sub: null };
 }
 
@@ -106,12 +104,6 @@ function showOverlay(kind, payload = null) {
       el('p', { class: 'spinner', text: 'RECONNECTING\u2026' }),
       el('p', { class: 'muted', text: 'Connection lost \u2014 retrying automatically. Keep this screen open.' })
     );
-  } else if (kind === 'countdown') {
-    // Non-blocking: a vote change during the countdown resets the server timer.
-    $overlay.append(
-      el('p', { class: 'big-countdown', id: 'countdown-number', text: String(payload) }),
-      el('p', { class: 'countdown-sub', text: 'ALL VOTES IN \u2014 REVEALING' })
-    );
   } else if (kind === 'notice') {
     $overlay.append(
       el('p', { class: 'overlay-title', text: payload }),
@@ -124,45 +116,6 @@ function showOverlay(kind, payload = null) {
 function hideOverlay() {
   $overlay.hidden = true;
   $overlay.replaceChildren();
-  if (countdownTimer) {
-    clearInterval(countdownTimer);
-    countdownTimer = null;
-  }
-}
-
-function countdownSecondsLeft() {
-  return Math.max(0, Math.ceil((countdownEndsAt - Date.now()) / 1000));
-}
-
-function syncCountdownOverlay() {
-  const active = state && state.phase === 'voting' && state.countdownRemaining != null;
-  const showing = !$overlay.hidden && $overlay.dataset.kind === 'countdown';
-  if (!active) {
-    if (showing) hideOverlay();
-    countdownEndsAt = null;
-    return;
-  }
-  if (!showing) showOverlay('countdown', countdownSecondsLeft());
-  if (!countdownTimer) {
-    countdownTimer = setInterval(() => {
-      const $num = $overlay.querySelector('#countdown-number');
-      if (!$num) return;
-      const secs = countdownSecondsLeft();
-      $num.textContent = String(secs);
-      if (secs <= 0 && countdownTimer) {
-        clearInterval(countdownTimer);
-        countdownTimer = null;
-      }
-    }, 100);
-  }
-}
-
-function refreshCountdownClock() {
-  if (state && state.countdownRemaining != null) {
-    countdownEndsAt = Date.now() + state.countdownRemaining;
-  } else {
-    countdownEndsAt = null;
-  }
 }
 
 /* ------------------------------ session ------------------------------ */
@@ -174,7 +127,6 @@ function resetToHome(message = null) {
   you = null;
   selectedVote = null;
   roomCode = null;
-  countdownEndsAt = null;
   lobbyDescDraft = '';
   lobbyDescCaret = null;
   consensusChoice = null;
@@ -527,8 +479,7 @@ function renderVoting() {
         'aria-pressed': isSelected ? 'true' : 'false',
         'aria-label': `Vote ${card.label}`,
       },
-        el('span', { class: 'card-emoji', text: face.emoji }),
-        el('span', { class: 'card-label', text: face.sub || '\u00a0' })
+        el('span', { class: 'card-emoji', text: face.emoji })
       );
       cardEl.addEventListener('click', async () => {
         if (selectedVote === card.value) return;
@@ -596,8 +547,7 @@ function renderReveal() {
         'data-value': p.vote,
         style: `animation-delay:${(i++) * 0.08}s`,
       },
-        el('span', { class: 'reveal-emoji', text: face.emoji }),
-        el('span', { class: 'reveal-value', text: face.sub || String(p.vote) }),
+        el('span', { class: 'reveal-value', text: face.emoji }),
         el('span', { class: 'reveal-name', text: p.name })
       ));
     }
@@ -713,8 +663,6 @@ function render() {
     }
     lobbyDescCaret = null;
   }
-  refreshCountdownClock();
-  syncCountdownOverlay();
 }
 
 /* ------------------------------ socket wiring ------------------------------ */
