@@ -14,7 +14,7 @@ Then open `http://localhost:3000/` (host port mapping is free to change via `-p 
 ## How it works
 
 1. One person creates a room and becomes the **Scrum Master (SM)**.
-2. Everyone else joins with the **4-character room code** (unambiguous alphabet — no O/0 or I/1 mix-ups).
+2. Everyone else joins with the **4-character room code** (unambiguous alphabet — no O/0 or I/1 mix-ups). Tick **Join as spectator** to attend without voting — ideal for designers and QA. Spectators see the vote board and reveal live, never block the timer, and have their own capacity (20 per room).
 3. The SM types a **one-sentence story description** to start the round.
 4. Each player votes from their **private hand**: 0, 1, 2, 3, 5, 8, 13, 21, ☕ coffee, or ❓ question. Nobody sees anyone else's card until reveal.
 5. When **all connected players** have voted, a **5-second countdown** to reveal starts — any vote change resets it back to 5s.

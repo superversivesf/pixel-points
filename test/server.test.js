@@ -276,3 +276,84 @@ describe('leave + abandon', () => {
     expect(bad.ok).toBe(false);
   }, 12000);
 });
+
+describe('spectators', () => {
+  it('spectator joins, sees board + reveal, cannot vote, never blocks reveal', async () => {
+    const url = await boot();
+    const sm = connect(url);
+    await connected(sm);
+    const create = await emitAck(sm, 'room:create', { name: 'Boss' });
+    const p1 = connect(url);
+    await connected(p1);
+    const p2 = connect(url);
+    await connected(p2);
+    const sp = connect(url);
+    await connected(sp);
+    const j1 = await emitAck(p1, 'room:join', { code: create.code, name: 'A' });
+    expect(j1.ok).toBe(true);
+    await emitAck(p2, 'room:join', { code: create.code, name: 'B' });
+    const js = await emitAck(sp, 'room:join', { code: create.code, name: 'QA', spectate: true });
+    expect(js.ok).toBe(true);
+    expect(js.state.you.role).toBe('spectator');
+    await emitAck(sm, 'round:start', { description: 'd' });
+    // spectator tries to vote -> rejected
+    const bad = await emitAck(sp, 'vote:cast', { value: '5' });
+    expect(bad.ok).toBe(false);
+    expect(bad.error).toBe('Not a voter');
+    // spectator sees a player's voted flag without the value
+    await emitAck(p1, 'vote:cast', { value: '13' });
+    const spView = await nextUpdate(sp, (u) => u.players.some((p) => p.name === 'A' && p.voted));
+    expect(JSON.stringify(spView)).not.toContain('"13"');
+    // second voter votes -> reveal happens with spectator watching
+    await emitAck(p2, 'vote:cast', { value: '5' });
+    const reveal = await nextUpdate(sp, (u) => u.phase === 'reveal', { timeout: 9000 });
+    expect(reveal.reveal.players.find((p) => p.name === 'QA').role).toBe('spectator');
+    expect(reveal.reveal.players.find((p) => p.name === 'A').vote).toBe('13');
+    expect(reveal.reveal.spread).toEqual({ min: 5, max: 13 });
+  }, 15000);
+
+  it('spectator cannot act as SM', async () => {
+    const url = await boot();
+    const sm = connect(url);
+    await connected(sm);
+    const create = await emitAck(sm, 'room:create', { name: 'Boss' });
+    const p1 = connect(url);
+    await connected(p1);
+    const p2 = connect(url);
+    await connected(p2);
+    const sp = connect(url);
+    await connected(sp);
+    await emitAck(p1, 'room:join', { code: create.code, name: 'A' });
+    await emitAck(p2, 'room:join', { code: create.code, name: 'B' });
+    await emitAck(sp, 'room:join', { code: create.code, name: 'QA', spectate: true });
+    const start = await emitAck(sp, 'round:start', { description: 'x' });
+    expect(start.ok).toBe(false);
+    const abandon = await emitAck(sp, 'round:abandon', {});
+    expect(abandon.ok).toBe(false);
+  }, 12000);
+
+  it('spectator mid-countdown join does not delay the reveal', async () => {
+    const url = await boot();
+    const sm = connect(url);
+    await connected(sm);
+    const create = await emitAck(sm, 'room:create', { name: 'Boss' });
+    const p1 = connect(url);
+    await connected(p1);
+    const p2 = connect(url);
+    await connected(p2);
+    const sp = connect(url);
+    await connected(sp);
+    await emitAck(p1, 'room:join', { code: create.code, name: 'A' });
+    await emitAck(p2, 'room:join', { code: create.code, name: 'B' });
+    await emitAck(sm, 'round:start', { description: 'd' });
+    await emitAck(p1, 'vote:cast', { value: '3' });
+    await emitAck(p2, 'vote:cast', { value: '8' });
+    // both voted -> countdown running; spectator joins now
+    await emitAck(sp, 'room:join', { code: create.code, name: 'QA', spectate: true });
+    const t0 = Date.now();
+    const reveal = await nextUpdate(sp, (u) => u.phase === 'reveal', { timeout: 9000 });
+    const elapsed = Date.now() - t0;
+    expect(reveal.reveal).not.toBeNull();
+    expect(elapsed).toBeLessThan(6000); // reveal fired on the original timer, not extended
+  }, 12000);
+});

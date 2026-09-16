@@ -382,6 +382,22 @@ button.danger {
 
 .player-role.sm { background: var(--accent); color: var(--bg); }
 .player-role.player { background: var(--border); color: var(--fg); }
+.player-role.spectator { background: transparent; color: var(--muted); border: 1px dashed var(--muted); }
+
+/* Spectator join checkbox */
+.spectate-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+  margin-top: 4px;
+}
+.spectate-label input { width: 16px; height: 16px; accent-color: var(--accent); }
+
+/* Spectator tile on the reveal board */
+.reveal-card.spectator { border-style: dashed; opacity: 0.75; }
 
 .player-status { color: var(--muted); font-size: 12px; flex-shrink: 0; }
 .player-status.offline { color: var(--accent-2); }

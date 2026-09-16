@@ -167,3 +167,39 @@ describe('leaveRoom', () => {
     vi.useRealTimers();
   });
 });
+
+describe('spectator registry', () => {
+  it('joinRoom with spectate flag adds a spectator and mints a token', () => {
+    const reg = createRoomRegistry();
+    const { code } = reg.createRoom('smS', 'Boss');
+    const out = reg.joinRoom(code, 'sp1', 'Watcher', { spectate: true });
+    expect(out.player.role).toBe('spectator');
+    expect(typeof out.token).toBe('string');
+    const hit = reg.getBySession(out.token);
+    expect(hit.player.role).toBe('spectator');
+  });
+  it('spectator sessions resume after reconnect', () => {
+    const reg = createRoomRegistry();
+    const { code } = reg.createRoom('smS', 'Boss');
+    const out = reg.joinRoom(code, 'sp1', 'Watcher', { spectate: true });
+    out.player.connected = false;
+    const hit = reg.getBySession(out.token);
+    hit.room.reconnect('sp1');
+    expect(hit.player.connected).toBe(true);
+  });
+  it('spectators are never evicted by the grace sweep', () => {
+    vi.useFakeTimers();
+    const reg = createRoomRegistry();
+    const { code } = reg.createRoom('smS', 'Boss');
+    reg.joinRoom(code, 'p1', 'A');
+    reg.joinRoom(code, 'p2', 'B');
+    const out = reg.joinRoom(code, 'sp1', 'Watcher', { spectate: true });
+    const room = reg.getRoom(code);
+    room.disconnect('sp1');
+    vi.advanceTimersByTime(DISCONNECT_GRACE_MS + 5000);
+    reg.sweep(Date.now());
+    expect(room.players.has('sp1')).toBe(true); // never evicted
+    void out;
+    vi.useRealTimers();
+  });
+});

@@ -38,10 +38,10 @@ export function createRoomRegistry() {
       return { code, room, token };
     },
 
-    joinRoom(code, sessionId, name) {
+    joinRoom(code, sessionId, name, { spectate = false } = {}) {
       const room = rooms.get(code);
       if (!room) throw new Error('Room not found');
-      const player = room.addPlayer(sessionId, name);
+      const player = spectate ? room.addSpectator(sessionId, name) : room.addPlayer(sessionId, name);
       emptySince.delete(code);
       const token = randomUUID();
       sessions.set(token, { roomCode: code, sessionId });
@@ -73,7 +73,9 @@ export function createRoomRegistry() {
     sweep(now = Date.now()) {
       for (const [code, room] of rooms) {
         for (const [sid, p] of room.players) {
-          if (p.role !== 'sm'
+          // SM and spectators are never evicted (spectators hold no votes
+          // and can't block the countdown, so a stale one is harmless).
+          if (p.role !== 'sm' && p.role !== 'spectator'
             && !p.connected
             && p.connectedAt
             && now - p.connectedAt > DISCONNECT_GRACE_MS) {

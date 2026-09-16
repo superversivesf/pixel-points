@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { GameRoom, REVEAL_DELAY_MS, MAX_HISTORY } from '../server/game.js';
+import { GameRoom, REVEAL_DELAY_MS, MAX_HISTORY, MAX_SPECTATORS } from '../server/game.js';
 
 afterEach(() => vi.useRealTimers());
 
@@ -259,5 +259,76 @@ describe('history cap', () => {
     expect(room.publicState.history.length).toBe(MAX_HISTORY);
     expect(room.publicState.history[0].description).toBe(`story ${MAX_HISTORY + 9}`);
     vi.useRealTimers();
+  });
+});
+
+describe('spectators', () => {
+  it('spectator joins with role spectator, never blocks the countdown', () => {
+    vi.useFakeTimers();
+    const room = roomWithVoters(2);
+    room.addSpectator('sp1', 'Watcher');
+    expect(room.getPlayer('sp1').role).toBe('spectator');
+    room.castVote('p0', '5');
+    room.castVote('p1', '8');
+    // spectator present, never voted: countdown must still run
+    expect(room.publicState.countdownRemaining).not.toBe(null);
+    vi.advanceTimersByTime(REVEAL_DELAY_MS);
+    expect(room.publicState.phase).toBe('reveal');
+    vi.useRealTimers();
+  });
+  it('spectator cannot vote or act as SM', () => {
+    const room = roomWithVoters(2);
+    room.addSpectator('sp1', 'Watcher');
+    expect(() => room.castVote('sp1', '5')).toThrow();
+    expect(() => room.startRound('sp1', 'x')).toThrow();
+    expect(() => room.newRound('sp1')).toThrow();
+    expect(() => room.consensus('sp1', '5')).toThrow();
+  });
+  it('spectator can join mid-countdown without stopping it', () => {
+    vi.useFakeTimers();
+    const room = roomWithVoters(2);
+    room.castVote('p0', '5');
+    room.castVote('p1', '8');
+    room.addSpectator('sp1', 'Watcher');
+    expect(room.publicState.countdownRemaining).not.toBe(null);
+    vi.advanceTimersByTime(REVEAL_DELAY_MS);
+    expect(room.publicState.phase).toBe('reveal');
+    vi.useRealTimers();
+  });
+  it('spectator does not count toward voter minimum', () => {
+    const room = new GameRoom('TEST');
+    room.addSm('sm', 'Boss');
+    room.addPlayer('p1', 'Alice');
+    room.addSpectator('sp1', 'Watcher');
+    expect(() => room.startRound('sm', 'x')).toThrow(); // only 1 voter
+  });
+  it('spectators get their own capacity limit, separate from voters', () => {
+    const room = new GameRoom('TEST');
+    room.addSm('sm', 'Boss');
+    for (let i = 0; i < 11; i++) room.addPlayer(`p${i}`, `P${i}`); // 12 total, full
+    expect(() => room.addPlayer('p12', 'X')).toThrow('Room full');
+    // spectator slots still open, with their own cap
+    for (let i = 0; i < MAX_SPECTATORS; i++) room.addSpectator(`sp${i}`, `W${i}`);
+    expect(() => room.addSpectator('spX', 'WX')).toThrow('Spectator room full');
+  });
+  it('reveal data includes spectators in players list (connected flag) but votes are null', () => {
+    vi.useFakeTimers();
+    const room = roomWithVoters(2);
+    room.addSpectator('sp1', 'Watcher');
+    room.disconnect('sp1');
+    room.castVote('p0', '5');
+    room.castVote('p1', '8');
+    vi.advanceTimersByTime(REVEAL_DELAY_MS);
+    const sp = room.revealData.players.find((p) => p.name === 'Watcher');
+    expect(sp).toBeDefined();
+    expect(sp.vote).toBe(null);
+    expect(sp.connected).toBe(false);
+    vi.useRealTimers();
+  });
+  it('spectator can be evicted by sweep path (removePlayer) without side effects', () => {
+    const room = roomWithVoters(2);
+    room.addSpectator('sp1', 'Watcher');
+    room.removePlayer('sp1');
+    expect(room.players.has('sp1')).toBe(false);
   });
 });

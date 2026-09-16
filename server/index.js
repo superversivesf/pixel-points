@@ -169,7 +169,7 @@ export async function startServer({ port = 0 } = {}) {
       const sessionId = randomUUID();
       let out;
       try {
-        out = reg.joinRoom(code, sessionId, name);
+        out = reg.joinRoom(code, sessionId, name, { spectate: data?.spectate === true });
       } catch (e) {
         if (e.message === 'Room not found') badCodeTracker.record(ip, false);
         return ack({ ok: false, error: e.message });

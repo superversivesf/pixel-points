@@ -4,6 +4,7 @@ export const REVEAL_DELAY_MS = 5000;
 const MAX_PLAYERS = 12;
 const MIN_VOTERS = 2;
 export const MAX_HISTORY = 500;
+export const MAX_SPECTATORS = 20;
 
 export class GameRoom {
   constructor(roomCode, { onCountdownEnd = () => {} } = {}) {
@@ -40,6 +41,19 @@ export class GameRoom {
     this.players.set(sessionId, player);
     this._recomputeCountdown(); // mid-vote join stops an in-flight countdown
     return player;
+  }
+
+  addSpectator(sessionId, name) {
+    // Spectators watch the board; they never vote and never block the countdown,
+    // so joining/leaving does NOT recompute the countdown.
+    const spectators = [...this.players.values()].filter((p) => p.role === 'spectator');
+    if (spectators.length >= MAX_SPECTATORS) throw new Error('Spectator room full');
+    const spectator = {
+      sessionId, name: this._uniqueName(name), role: 'spectator',
+      connected: true, connectedAt: undefined, vote: null, voted: false,
+    };
+    this.players.set(sessionId, spectator);
+    return spectator;
   }
 
   removePlayer(sessionId) {
@@ -201,10 +215,10 @@ export class GameRoom {
   get revealData() {
     if (this.phase !== 'reveal') return null;
     const players = [...this.players.values()]
-      .filter((p) => p.role === 'player')
-      .map((p) => ({ name: p.name, vote: p.vote, connected: p.connected }));
+      .filter((p) => p.role === 'player' || p.role === 'spectator')
+      .map((p) => ({ name: p.name, role: p.role, vote: p.vote, connected: p.connected }));
     const nums = players
-      .filter((p) => NUMERIC_DECK.includes(p.vote))
+      .filter((p) => p.role !== 'spectator' && NUMERIC_DECK.includes(p.vote))
       .map((p) => Number(p.vote));
     return {
       description: this.description,

@@ -184,12 +184,19 @@ function renderHome() {
     render();
   });
 
+  const spectateCheck = el('input', { type: 'checkbox', id: 'join-spectate' });
+  const spectateLabel = el('label', { for: 'join-spectate', class: 'spectate-label' },
+    spectateCheck,
+    ' Join as spectator (watch only, no vote)'
+  );
+
   const joinForm = el('form', { class: 'form' },
     el('h2', { text: 'JOIN ROOM' }),
     el('label', { for: 'join-code', text: 'ROOM CODE' }),
     joinCode,
     el('label', { for: 'join-name', text: 'YOUR NAME' }),
     joinName,
+    spectateLabel,
     el('button', { type: 'submit', text: 'JOIN ROOM' })
   );
   joinForm.addEventListener('submit', async (e) => {
@@ -197,13 +204,14 @@ function renderHome() {
     homeError = null;
     const code = joinCode.value.trim().toUpperCase();
     const name = joinName.value;
+    const spectate = spectateCheck.checked;
     if (!code) {
       homeError = 'Enter the 4-character room code';
       renderHome();
       restoreJoinInput(code, name);
       return;
     }
-    const res = await emitAck('room:join', { code, name });
+    const res = await emitAck('room:join', { code, name, spectate });
     if (!res || !res.ok) {
       homeError = (res && res.error) || 'Could not join the room.';
       renderHome();
@@ -376,7 +384,7 @@ function renderPlayerList() {
     else if (state.phase === 'voting' && p.voted) status = 'voted';
     list.append(el('li', { class: 'player-row' },
       el('span', { text: p.name }),
-      el('span', { class: `player-role ${p.role}`, text: p.role === 'sm' ? 'SM' : 'P' }),
+      el('span', { class: `player-role ${p.role}`, text: p.role === 'sm' ? 'SM' : p.role === 'spectator' ? 'SPEC' : 'P' }),
       el('span', { class: `player-status${p.connected ? '' : ' offline'}`, text: status })
     ));
   }
@@ -439,8 +447,8 @@ function renderLobby() {
 
 function renderVoting() {
   const wrap = el('section', {});
-  if (you && you.role === 'sm') {
-    wrap.append(el('h2', { text: 'VOTE BOARD' }));
+  if (you && (you.role === 'sm' || you.role === 'spectator')) {
+    wrap.append(el('h2', { text: you.role === 'spectator' ? 'VOTE BOARD (SPECTATING)' : 'VOTE BOARD' }));
     const grid = el('div', { class: 'board-grid' });
     for (const p of state.players.filter((p) => p.role === 'player')) {
       grid.append(el('div', {
@@ -456,16 +464,18 @@ function renderVoting() {
       ));
     }
     wrap.append(grid);
-    const abandonBtn = el('button', {
-      class: 'abandon-btn',
-      text: 'ABANDON ROUND',
-      onclick: async () => {
-        if (!confirm('Abandon this round? All votes are discarded and you return to the lobby.')) return;
-        const res = await emitAck('round:abandon', {});
-        if (!res || !res.ok) showOverlay('notice', (res && res.error) || 'Could not abandon the round.');
-      },
-    });
-    wrap.append(abandonBtn);
+    if (you.role === 'sm') {
+      const abandonBtn = el('button', {
+        class: 'abandon-btn',
+        text: 'ABANDON ROUND',
+        onclick: async () => {
+          if (!confirm('Abandon this round? All votes are discarded and you return to the lobby.')) return;
+          const res = await emitAck('round:abandon', {});
+          if (!res || !res.ok) showOverlay('notice', (res && res.error) || 'Could not abandon the round.');
+        },
+      });
+      wrap.append(abandonBtn);
+    }
   } else {
     wrap.append(el('h2', { text: 'PICK YOUR CARD' }));
     const hand = el('div', { class: 'hand' });
@@ -522,7 +532,7 @@ function renderReveal() {
   const unanimous = numericVotes.length >= 2
     && numericVotes.every((v) => v === numericVotes[0]);
 
-  const showBigBoard = (you && you.role === 'sm') || isDesktop();
+  const showBigBoard = (you && (you.role === 'sm' || you.role === 'spectator')) || isDesktop();
 
   wrap.append(...compact([
     el('h2', { text: showBigBoard ? 'HANDS UP \u2014 ALL CARDS REVEALED' : 'CARDS REVEALED' }),
@@ -541,6 +551,16 @@ function renderReveal() {
     const grid = el('div', { class: 'reveal-grid' });
     let i = 0;
     for (const p of reveal.players) {
+      if (p.role === 'spectator') {
+        grid.append(el('div', {
+          class: `reveal-card spectator${p.connected ? '' : ' offline'}`,
+          style: `animation-delay:${(i++) * 0.08}s`,
+        },
+          el('span', { class: 'reveal-value', text: '\u{1F441}' }),
+          el('span', { class: 'reveal-name', text: p.name })
+        ));
+        continue;
+      }
       const face = cardFace(p.vote);
       grid.append(el('div', {
         class: `reveal-card${p.connected ? '' : ' offline'}`,
@@ -555,6 +575,7 @@ function renderReveal() {
   } else {
     const list = el('ul', { class: 'vote-summary' });
     for (const p of reveal.players) {
+      if (p.role === 'spectator') continue;
       list.append(el('li', { class: 'vote-summary-row' },
         el('span', { class: 'vote-summary-name', text: p.name }),
         el('span', {
